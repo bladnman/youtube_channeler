@@ -1,1 +1,0 @@
-- Always remember to move all variable default definitions into a constant file

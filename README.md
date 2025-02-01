@@ -1,31 +1,27 @@
-# Starter Next.js Simple
+# YouTube Channeler
 
 ## About
-This is a sample starter project template built with Next.js. Use this as a foundation to quickly bootstrap your Next.js applications with a clean, minimal setup.
+This is a simple app that allows you to search for a YouTube channel and then see the videos from that channel.
 
-## Make it your own
-You will want a personal copy of this project in your own folder. We have a simple solution for this.
-
-```bash
-# replace my-project with your project name
-npx make-mine https://github.com/bladnman/youtube_channeler.git my-project
-```
-
-This will clone create a new folder `my-project` and copy the contents of this project into it. It will also remove the `.git` folder so you can start fresh and do a bit or renaming. [make-mine](https://www.npmjs.com/package/make-mine) can be used on any repo.
+![Day 1 Screenshot](./docs/images/day1_screenshot.png)
 
 
-## Development
-To run the development server:
+## Installation
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+1. Clone the repository
+2. Run `npm install`
+3. Run `npm run dev`
 
-Then open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
 
 ## References
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Next.js Learn](https://nextjs.org/learn)
-- [Next.js GitHub Repository](https://github.com/vercel/next.js)
+This project was created using the following references:
+
+Simple Next.js Starter:
+Start a new project with this simple starter using a single command.
+https://github.com/bladnman/starter-nextjs-simple/blob/main/README.md
+
+
+## License
+This project is licensed under the MIT License. See the LICENSE file for details.
+
