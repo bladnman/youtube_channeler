@@ -44,7 +44,7 @@ export async function GET(
       id: videoData.id,
       title: videoData.snippet?.title,
       description: videoData.snippet?.description,
-      thumbnail: videoData.snippet?.thumbnails?.high?.url,
+      thumbnail: videoData.snippet?.thumbnails?.maxres?.url || videoData.snippet?.thumbnails?.high?.url,
       publishedAt: videoData.snippet?.publishedAt,
       channelTitle: videoData.snippet?.channelTitle,
       duration: formattedDuration,

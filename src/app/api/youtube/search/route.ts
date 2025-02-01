@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     const videos = videosData.items.map((item: any) => ({
       id: item.id.videoId,
       title: item.snippet.title,
-      thumbnail: item.snippet.thumbnails.medium.url,
+      thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium.url,
       publishedAt: item.snippet.publishedAt,
       url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
     }))
