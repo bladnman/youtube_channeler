@@ -8,13 +8,20 @@ interface Video {
   thumbnail: string
   publishedAt: string
   url: string
+  description?: string
+  duration?: string
+  likeCount?: string
+  viewCount?: string
+  channelTitle?: string
 }
 
 interface YouTubeContextType {
   videos: Video[]
   loading: boolean
   error: string | null
+  selectedVideo: Video | null
   searchChannel: (query: string) => Promise<void>
+  selectVideo: (video: Video) => Promise<void>
 }
 
 const YouTubeContext = createContext<YouTubeContextType | undefined>(undefined)
@@ -31,13 +38,13 @@ export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
 
   const searchChannel = async (query: string) => {
     setLoading(true)
     setError(null)
+    setSelectedVideo(null)
     try {
-      // TODO: Implement the actual API call to fetch YouTube videos
-      // This will need to be implemented with YouTube Data API
       const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`)
       const data = await response.json()
       
@@ -54,8 +61,32 @@ export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const selectVideo = async (video: Video) => {
+    try {
+      // First set the basic video info we already have
+      setSelectedVideo(video)
+      
+      // Then fetch detailed information
+      const response = await fetch(`/api/youtube/video/${video.id}`)
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch video details')
+      }
+      
+      // Update the selected video with detailed information
+      setSelectedVideo(prevVideo => ({
+        ...prevVideo!,
+        ...data.video
+      }))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load video details')
+      // Keep the basic video information even if details fetch fails
+    }
+  }
+
   return (
-    <YouTubeContext.Provider value={{ videos, loading, error, searchChannel }}>
+    <YouTubeContext.Provider value={{ videos, loading, error, searchChannel, selectedVideo, selectVideo }}>
       {children}
     </YouTubeContext.Provider>
   )
