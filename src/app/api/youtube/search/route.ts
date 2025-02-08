@@ -39,6 +39,12 @@ export async function GET(request: NextRequest) {
     }
 
     const channelId = channelData.items[0].id.channelId
+    const channelInfo = {
+      id: channelId,
+      title: channelData.items[0].snippet.title,
+      thumbnail: channelData.items[0].snippet.thumbnails.high?.url || channelData.items[0].snippet.thumbnails.medium.url,
+      description: channelData.items[0].snippet.description,
+    }
 
     // Then, get the channel's videos
     const videosResponse = await fetch(
@@ -55,7 +61,7 @@ export async function GET(request: NextRequest) {
       url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
     }))
 
-    return NextResponse.json({ videos })
+    return NextResponse.json({ channel: channelInfo, videos })
   } catch (error) {
     console.error('Error fetching YouTube data:', error)
     return NextResponse.json(

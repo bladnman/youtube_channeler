@@ -3,7 +3,6 @@
 import { ChakraProvider } from '@chakra-ui/react';
 import { SessionProvider } from 'next-auth/react';
 import { ReactNode } from 'react';
-import { theme } from './theme';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -12,7 +11,11 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <SessionProvider>
-      <ChakraProvider theme={theme}>
+      <ChakraProvider 
+        toastOptions={{ defaultOptions: { position: 'top' } }}
+        cssVarsRoot="body"
+        disableGlobalStyle={true}
+      >
         {children}
       </ChakraProvider>
     </SessionProvider>

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
-import { Header } from './features/layout/components/Header';
-import { Providers } from './providers';
+import { ChakraHead } from './features/layout/components/ChakraHead';
+import { LayoutContent } from './features/layout/components/LayoutContent';
+import { RootClientWrapper } from './features/layout/components/RootClientWrapper';
+import RootStyleRegistry from './registry';
 
 export const metadata: Metadata = {
   title: 'Channel Surfer',
@@ -14,13 +16,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <ChakraHead />
+      </head>
       <body>
-        <Providers>
-          <Header />
-          <main style={{ marginTop: '60px', padding: '20px' }}>
-            {children}
-          </main>
-        </Providers>
+        <RootStyleRegistry>
+          <RootClientWrapper>
+            <LayoutContent>
+              {children}
+            </LayoutContent>
+          </RootClientWrapper>
+        </RootStyleRegistry>
       </body>
     </html>
   );

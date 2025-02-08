@@ -1,6 +1,7 @@
 'use client'
 
-import { Box, Flex, Image, SimpleGrid, Text } from '@chakra-ui/react'
+import { Box, Flex, HStack, Image, SimpleGrid, Text, VStack } from '@chakra-ui/react'
+import FavoriteButton from '../../channels/components/FavoriteButton'
 import { useYouTubeContext } from '../context/YouTubeContext'
 import { VideoDetail } from './VideoDetail'
 
@@ -13,7 +14,7 @@ interface Video {
 }
 
 export const VideoGrid = () => {
-  const { videos, loading, selectedVideo, selectVideo } = useYouTubeContext()
+  const { videos, loading, selectedVideo, selectVideo, currentChannel } = useYouTubeContext()
 
   if (loading) {
     return (
@@ -32,56 +33,84 @@ export const VideoGrid = () => {
   }
 
   return (
-    <Flex>
-      <Box flex={{ base: '1', lg: selectedVideo ? '0.6' : '1' }} transition="flex 0.3s">
-        <SimpleGrid columns={{ base: 1, sm: 2, md: selectedVideo ? 2 : 3, lg: selectedVideo ? 2 : 4 }} spacing={6} p={4}>
-          {videos.map((video: Video) => (
-            <Box
-              key={video.id}
-              borderRadius="lg"
-              overflow="hidden"
-              shadow="md"
-              transition="all 0.2s"
-              cursor="pointer"
-              onClick={() => selectVideo(video)}
-              position="relative"
-              borderWidth={selectedVideo?.id === video.id ? "4px" : "0"}
-              borderColor={selectedVideo?.id === video.id ? 'brand.500' : 'transparent'}
-              _hover={{ transform: 'scale(1.02)' }}
-            >
-              <Image
-                src={video.thumbnail}
-                alt={video.title}
-                width="100%"
-                height="auto"
-                objectFit="cover"
-              />
-              <Box p={4}>
-                <Text fontWeight="semibold" noOfLines={2}>
-                  {video.title}
-                </Text>
-                <Text fontSize="sm" color="gray.600" mt={2}>
-                  {new Date(video.publishedAt).toLocaleDateString()}
-                </Text>
-              </Box>
-            </Box>
-          ))}
-        </SimpleGrid>
-      </Box>
-      
-      {selectedVideo && (
-        <Box
-          flex="0.4"
-          maxW="600px"
-          display={{ base: 'none', lg: 'block' }}
-          height="calc(100vh - 72px)"  // Adjust based on your header height
-          position="sticky"
-          top="72px"  // Should match your header height
-          overflowX="hidden"
-        >
-          <VideoDetail />
+    <Flex direction="column">
+      {currentChannel && (
+        <Box p={4} borderBottom="1px" borderColor="gray.200">
+          <HStack spacing={4} align="center">
+            <Image
+              src={currentChannel.thumbnail}
+              alt={currentChannel.title}
+              boxSize="64px"
+              borderRadius="full"
+              objectFit="cover"
+            />
+            <VStack align="start" flex={1}>
+              <HStack justify="space-between" width="100%">
+                <Text fontSize="xl" fontWeight="bold">{currentChannel.title}</Text>
+                <FavoriteButton
+                  channelId={currentChannel.id}
+                  channelTitle={currentChannel.title}
+                  channelThumbnail={currentChannel.thumbnail}
+                  description={currentChannel.description}
+                />
+              </HStack>
+              <Text color="gray.600" noOfLines={2}>{currentChannel.description}</Text>
+            </VStack>
+          </HStack>
         </Box>
       )}
+      
+      <Flex>
+        <Box flex={{ base: '1', lg: selectedVideo ? '0.6' : '1' }} transition="flex 0.3s">
+          <SimpleGrid columns={{ base: 1, sm: 2, md: selectedVideo ? 2 : 3, lg: selectedVideo ? 2 : 4 }} spacing={6} p={4}>
+            {videos.map((video: Video) => (
+              <Box
+                key={video.id}
+                borderRadius="lg"
+                overflow="hidden"
+                shadow="md"
+                transition="all 0.2s"
+                cursor="pointer"
+                onClick={() => selectVideo(video)}
+                position="relative"
+                borderWidth={selectedVideo?.id === video.id ? "4px" : "0"}
+                borderColor={selectedVideo?.id === video.id ? 'brand.500' : 'transparent'}
+                _hover={{ transform: 'scale(1.02)' }}
+              >
+                <Image
+                  src={video.thumbnail}
+                  alt={video.title}
+                  width="100%"
+                  height="auto"
+                  objectFit="cover"
+                />
+                <Box p={4}>
+                  <Text fontWeight="semibold" noOfLines={2}>
+                    {video.title}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600" mt={2}>
+                    {new Date(video.publishedAt).toLocaleDateString()}
+                  </Text>
+                </Box>
+              </Box>
+            ))}
+          </SimpleGrid>
+        </Box>
+        
+        {selectedVideo && (
+          <Box
+            flex="0.4"
+            maxW="600px"
+            display={{ base: 'none', lg: 'block' }}
+            height="calc(100vh - 72px)"  // Adjust based on your header height
+            position="sticky"
+            top="72px"  // Should match your header height
+            overflowX="hidden"
+          >
+            <VideoDetail />
+          </Box>
+        )}
+      </Flex>
     </Flex>
   )
 } 

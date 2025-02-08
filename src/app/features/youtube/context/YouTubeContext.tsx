@@ -15,11 +15,19 @@ interface Video {
   channelTitle?: string
 }
 
+interface Channel {
+  id: string
+  title: string
+  thumbnail: string
+  description: string
+}
+
 interface YouTubeContextType {
   videos: Video[]
   loading: boolean
   error: string | null
   selectedVideo: Video | null
+  currentChannel: Channel | null
   searchChannel: (query: string) => Promise<void>
   selectVideo: (video: Video) => Promise<void>
 }
@@ -39,6 +47,7 @@ export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
+  const [currentChannel, setCurrentChannel] = useState<Channel | null>(null)
 
   const searchChannel = async (query: string) => {
     setLoading(true)
@@ -52,10 +61,12 @@ export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.message || 'Failed to fetch videos')
       }
       
+      setCurrentChannel(data.channel)
       setVideos(data.videos)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       setVideos([])
+      setCurrentChannel(null)
     } finally {
       setLoading(false)
     }
@@ -86,7 +97,15 @@ export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <YouTubeContext.Provider value={{ videos, loading, error, searchChannel, selectedVideo, selectVideo }}>
+    <YouTubeContext.Provider value={{ 
+      videos, 
+      loading, 
+      error, 
+      searchChannel, 
+      selectedVideo, 
+      selectVideo,
+      currentChannel 
+    }}>
       {children}
     </YouTubeContext.Provider>
   )
