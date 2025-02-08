@@ -1,11 +1,11 @@
 import { useFirebaseAuth } from '@/app/hooks/useFirebaseAuth';
 import { FavoriteChannel, getFavoriteChannels } from '@/app/models/FavoriteChannel';
 import { WarningIcon } from '@chakra-ui/icons';
-import { Box, Button, Card, CardBody, Grid, GridItem, Heading, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, Flex, Heading, Text, VStack, useToast } from '@chakra-ui/react';
 import { useSession } from 'next-auth/react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { ChannelCard } from './ChannelCard';
 import { ChannelGridSkeleton } from './ChannelCardSkeleton';
 import { EmptyFavorites } from './EmptyFavorites';
 
@@ -16,26 +16,52 @@ export default function FavoriteChannelsGrid() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const toast = useToast();
 
   const loadFavorites = useCallback(async () => {
-    if (!firebaseUser) return;
+    if (!firebaseUser) {
+      console.log('loadFavorites: No Firebase user available', {
+        session: session?.user?.email,
+        firebaseLoading
+      });
+      return;
+    }
     
     try {
       setLoading(true);
       setError(null);
+      console.log('loadFavorites: Starting to fetch favorites');
       const favorites = await getFavoriteChannels();
+      console.log('loadFavorites: Fetched favorites successfully', {
+        count: favorites.length
+      });
       setChannels(favorites);
     } catch (error) {
       console.error('Error loading favorite channels:', error);
-      setError('Failed to load favorite channels. Please try again later.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(`Failed to load favorite channels: ${errorMessage}`);
+      toast({
+        title: 'Error loading favorites',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setLoading(false);
     }
-  }, [firebaseUser]);
+  }, [firebaseUser, session, firebaseLoading, toast]);
 
   useEffect(() => {
-    void loadFavorites();
-  }, [loadFavorites]);
+    if (session && !firebaseLoading) {
+      console.log('FavoriteChannelsGrid: Loading favorites', {
+        session: session?.user?.email,
+        firebaseUser: firebaseUser?.email,
+        firebaseLoading
+      });
+      void loadFavorites();
+    }
+  }, [loadFavorites, session, firebaseUser, firebaseLoading]);
 
   if (!session) {
     return (
@@ -46,7 +72,12 @@ export default function FavoriteChannelsGrid() {
   }
 
   if (firebaseLoading || loading) {
-    return <ChannelGridSkeleton />;
+    return (
+      <Box>
+        <Text mb={4} color="gray.600">Loading your favorite channels...</Text>
+        <ChannelGridSkeleton />
+      </Box>
+    );
   }
 
   if (error) {
@@ -73,39 +104,30 @@ export default function FavoriteChannelsGrid() {
   }
 
   return (
-    <Box p={6}>
-      <Grid templateColumns="repeat(auto-fill, minmax(280px, 1fr))" gap={6}>
+    <Box>
+      <Flex
+        justify="center"
+        align="center"
+        wrap="wrap"
+        gap={3}
+        mx="auto"
+      >
         {channels.map((channel) => (
-          <GridItem key={channel.id}>
-            <Card 
-              cursor="pointer" 
-              onClick={() => router.push(`/channel/${channel.channelId}`)}
-              _hover={{ transform: 'scale(1.02)', transition: 'transform 0.2s' }}
-            >
-              <CardBody>
-                <VStack align="start" spacing={3}>
-                  <Box display="flex" alignItems="center" width="100%">
-                    <Box position="relative" width="50px" height="50px" borderRadius="full" overflow="hidden">
-                      <Image
-                        src={channel.channelThumbnail}
-                        alt={channel.channelTitle}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                      />
-                    </Box>
-                    <Heading size="md" ml={4} noOfLines={1}>
-                      {channel.channelTitle}
-                    </Heading>
-                  </Box>
-                  <Text color="gray.600" noOfLines={2}>
-                    {channel.description}
-                  </Text>
-                </VStack>
-              </CardBody>
-            </Card>
-          </GridItem>
+          <Box 
+            key={channel.id}
+            w={{ base: "100%", sm: "45%", md: "200px" }}
+            maxW="100%"
+            flexGrow={0}
+            flexShrink={0}
+            flexBasis="auto"
+          >
+            <ChannelCard
+              channel={channel}
+              onClick={() => router.push(`/channel/${channel.customUrl || channel.channelId}`)}
+            />
+          </Box>
         ))}
-      </Grid>
+      </Flex>
     </Box>
   );
 } 

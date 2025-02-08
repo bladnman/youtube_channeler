@@ -1,6 +1,6 @@
 import { app, db } from '@/lib/firebase';
 import { getAuth } from 'firebase/auth';
-import { collection, deleteDoc, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDocs, limit, query, setDoc, where } from 'firebase/firestore';
 
 export interface FavoriteChannel {
   id: string;
@@ -9,6 +9,7 @@ export interface FavoriteChannel {
   channelTitle: string;
   channelThumbnail: string;
   description: string;
+  customUrl?: string;
   createdAt: Date;
 }
 
@@ -69,14 +70,16 @@ export async function removeFavoriteChannel(channelId: string) {
   }
 
   try {
-    console.log('removeFavoriteChannel: Querying for documents to remove');
-    const querySnapshot = await getDocs(
-      query(
-        favoriteChannelsCollection,
-        where('channelId', '==', channelId),
-        where('userId', '==', auth.currentUser.uid)
-      )
+    console.log('removeFavoriteChannel: Creating query');
+    const q = query(
+      favoriteChannelsCollection,
+      where('userId', '==', auth.currentUser.uid),
+      where('channelId', '==', channelId),
+      limit(50)
     );
+    
+    console.log('removeFavoriteChannel: Executing query');
+    const querySnapshot = await getDocs(q);
     
     console.log('removeFavoriteChannel: Found documents', { 
       count: querySnapshot.size 
@@ -97,7 +100,8 @@ export async function getFavoriteChannels(): Promise<FavoriteChannel[]> {
     currentUser: auth.currentUser ? {
       uid: auth.currentUser.uid,
       email: auth.currentUser.email
-    } : null 
+    } : null,
+    authInitialized: auth.currentUser !== null
   });
 
   if (!auth.currentUser) {
@@ -106,21 +110,37 @@ export async function getFavoriteChannels(): Promise<FavoriteChannel[]> {
   }
 
   try {
-    console.log('getFavoriteChannels: Querying for documents');
-    const querySnapshot = await getDocs(
-      query(
-        favoriteChannelsCollection,
-        where('userId', '==', auth.currentUser.uid)
-      )
+    console.log('getFavoriteChannels: Creating query for user', auth.currentUser.uid);
+    const q = query(
+      favoriteChannelsCollection,
+      where('userId', '==', auth.currentUser.uid),
+      limit(50)
     );
     
-    console.log('getFavoriteChannels: Found documents', { 
-      count: querySnapshot.size 
+    console.log('getFavoriteChannels: Executing query');
+    const querySnapshot = await getDocs(q);
+    
+    console.log('getFavoriteChannels: Query completed', { 
+      documentCount: querySnapshot.size,
+      empty: querySnapshot.empty
     });
     
-    return querySnapshot.docs.map(doc => doc.data() as FavoriteChannel);
+    const channels = querySnapshot.docs.map(doc => {
+      const data = doc.data() as FavoriteChannel;
+      console.log('getFavoriteChannels: Processing document', {
+        id: doc.id,
+        channelId: data.channelId,
+        channelTitle: data.channelTitle
+      });
+      return data;
+    });
+
+    return channels;
   } catch (error) {
     console.error('getFavoriteChannels: Error fetching documents:', error);
-    throw error;
+    if (error instanceof Error) {
+      throw new Error(`Failed to fetch favorite channels: ${error.message}`);
+    }
+    throw new Error('Failed to fetch favorite channels: Unknown error');
   }
 } 

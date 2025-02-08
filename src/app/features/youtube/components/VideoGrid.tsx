@@ -1,8 +1,10 @@
 'use client'
 
-import { Box, Flex, HStack, Image, SimpleGrid, Text, VStack } from '@chakra-ui/react'
-import FavoriteButton from '../../channels/components/FavoriteButton'
+import { Box, Flex, Text, Wrap, WrapItem } from '@chakra-ui/react'
 import { useYouTubeContext } from '../context/YouTubeContext'
+import { useVideoSelection } from '../hooks/useVideoSelection'
+import { ChannelHeader } from './ChannelHeader'
+import { VideoCard } from './VideoCard'
 import { VideoDetail } from './VideoDetail'
 
 interface Video {
@@ -10,91 +12,66 @@ interface Video {
   title: string
   thumbnail: string
   publishedAt: string
-  url: string
+  url?: string
 }
 
-export const VideoGrid = () => {
-  const { videos, loading, selectedVideo, selectVideo, currentChannel } = useYouTubeContext()
+interface Channel {
+  id: string
+  title: string
+  thumbnail: string
+  description: string
+}
 
-  if (loading) {
-    return (
-      <Box textAlign="center" py={10}>
-        <Text>Loading videos...</Text>
-      </Box>
-    )
-  }
+interface VideoGridProps {
+  videos: Video[]
+  hideChannelInfo?: boolean
+  currentChannel?: Channel
+}
+
+export const VideoGrid = ({ videos, hideChannelInfo, currentChannel: propChannel }: VideoGridProps) => {
+  const { currentChannel: contextChannel } = useYouTubeContext()
+  const { selectedVideo, handleVideoSelect } = useVideoSelection()
+  const displayChannel = propChannel || contextChannel
 
   if (!videos?.length) {
     return (
       <Box textAlign="center" py={10}>
-        <Text>No videos found. Try searching for a YouTube channel.</Text>
+        <Text>No videos found.</Text>
       </Box>
     )
   }
 
   return (
-    <Flex direction="column">
-      {currentChannel && (
-        <Box p={4} borderBottom="1px" borderColor="gray.200">
-          <HStack spacing={4} align="center">
-            <Image
-              src={currentChannel.thumbnail}
-              alt={currentChannel.title}
-              boxSize="64px"
-              borderRadius="full"
-              objectFit="cover"
-            />
-            <VStack align="start" flex={1}>
-              <HStack justify="space-between" width="100%">
-                <Text fontSize="xl" fontWeight="bold">{currentChannel.title}</Text>
-                <FavoriteButton
-                  channelId={currentChannel.id}
-                  channelTitle={currentChannel.title}
-                  channelThumbnail={currentChannel.thumbnail}
-                  description={currentChannel.description}
-                />
-              </HStack>
-              <Text color="gray.600" noOfLines={2}>{currentChannel.description}</Text>
-            </VStack>
-          </HStack>
-        </Box>
+    <Flex direction="column" align="center">
+      {displayChannel && !hideChannelInfo && (
+        <ChannelHeader channel={displayChannel} />
       )}
       
-      <Flex>
-        <Box flex={{ base: '1', lg: selectedVideo ? '0.6' : '1' }} transition="flex 0.3s">
-          <SimpleGrid columns={{ base: 1, sm: 2, md: selectedVideo ? 2 : 3, lg: selectedVideo ? 2 : 4 }} spacing={6} p={4}>
-            {videos.map((video: Video) => (
-              <Box
-                key={video.id}
-                borderRadius="lg"
-                overflow="hidden"
-                shadow="md"
-                transition="all 0.2s"
-                cursor="pointer"
-                onClick={() => selectVideo(video)}
-                position="relative"
-                borderWidth={selectedVideo?.id === video.id ? "4px" : "0"}
-                borderColor={selectedVideo?.id === video.id ? 'brand.500' : 'transparent'}
-                _hover={{ transform: 'scale(1.02)' }}
-              >
-                <Image
-                  src={video.thumbnail}
-                  alt={video.title}
-                  width="100%"
-                  height="auto"
-                  objectFit="cover"
+      <Flex justify="center">
+        <Box 
+          flex={{ base: '1', lg: selectedVideo ? '0.6' : '1' }} 
+          transition="flex 0.3s"
+          maxW="1400px"
+          w="full"
+          mx="auto"
+        >
+          <Wrap 
+            spacing={6} 
+            justify="center"
+            p={4}
+            display="flex"
+            alignItems="center"
+          >
+            {videos.map((video) => (
+              <WrapItem key={video.id}>
+                <VideoCard
+                  video={video}
+                  isSelected={selectedVideo?.id === video.id}
+                  onSelect={handleVideoSelect}
                 />
-                <Box p={4}>
-                  <Text fontWeight="semibold" noOfLines={2}>
-                    {video.title}
-                  </Text>
-                  <Text fontSize="sm" color="gray.600" mt={2}>
-                    {new Date(video.publishedAt).toLocaleDateString()}
-                  </Text>
-                </Box>
-              </Box>
+              </WrapItem>
             ))}
-          </SimpleGrid>
+          </Wrap>
         </Box>
         
         {selectedVideo && (
@@ -102,9 +79,9 @@ export const VideoGrid = () => {
             flex="0.4"
             maxW="600px"
             display={{ base: 'none', lg: 'block' }}
-            height="calc(100vh - 72px)"  // Adjust based on your header height
+            height="calc(100vh - 72px)"
             position="sticky"
-            top="72px"  // Should match your header height
+            top="72px"
             overflowX="hidden"
           >
             <VideoDetail />

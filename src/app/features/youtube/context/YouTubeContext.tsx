@@ -1,6 +1,21 @@
 'use client'
 
-import { createContext, ReactNode, useContext, useState } from 'react'
+import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
+
+// Add cache interfaces
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+interface Cache {
+  channels: { [key: string]: CacheEntry<Channel> };
+  videos: { [key: string]: CacheEntry<Video> };
+  searches: { [key: string]: CacheEntry<Channel> };
+}
+
+// Cache duration in milliseconds (5 minutes)
+const CACHE_DURATION = 5 * 60 * 1000;
 
 interface Video {
   id: string
@@ -20,16 +35,25 @@ interface Channel {
   title: string
   thumbnail: string
   description: string
+  customUrl?: string
+  subscriberCount?: string
+}
+
+interface APIError {
+  message: string;
+  timestamp: number;
 }
 
 interface YouTubeContextType {
-  videos: Video[]
   loading: boolean
   error: string | null
   selectedVideo: Video | null
   currentChannel: Channel | null
-  searchChannel: (query: string) => Promise<void>
+  searchChannel: (query: string) => Promise<Channel | null>
   selectVideo: (video: Video) => Promise<void>
+  setCurrentChannel: (channel: Channel | null) => void
+  apiError: APIError | null
+  handleAPIError: (error: Error) => void
 }
 
 const YouTubeContext = createContext<YouTubeContextType | undefined>(undefined)
@@ -43,30 +67,93 @@ export const useYouTubeContext = () => {
 }
 
 export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
-  const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null)
+  const [cache] = useState<Cache>({ channels: {}, videos: {}, searches: {} })
+  const [apiError, setApiError] = useState<APIError | null>(null)
+
+  const getCachedData = useCallback((
+    cacheKey: string,
+    cacheType: keyof Cache
+  ): Channel | Video | null => {
+    const entry = cache[cacheType][cacheKey];
+    if (entry && Date.now() - entry.timestamp < CACHE_DURATION) {
+      return entry.data;
+    }
+    return null;
+  }, [cache]);
+
+  const setCachedData = useCallback((
+    cacheKey: string,
+    cacheType: keyof Cache,
+    data: Channel | Video
+  ) => {
+    if (cacheType === 'videos' && 'url' in data) {
+      (cache.videos as any)[cacheKey] = {
+        data,
+        timestamp: Date.now(),
+      };
+    } else if ((cacheType === 'channels' || cacheType === 'searches') && !('url' in data)) {
+      (cache[cacheType] as any)[cacheKey] = {
+        data,
+        timestamp: Date.now(),
+      };
+    }
+  }, [cache]);
+
+  const handleAPIError = useCallback((error: any) => {
+    // Check for quota exceeded error in various formats
+    const errorMessage = error?.message || error?.error?.message || '';
+    const isQuotaError = 
+      errorMessage.includes('quota') || 
+      errorMessage.includes('exceeded') ||
+      (error?.error?.errors?.[0]?.reason === 'quotaExceeded');
+
+    if (isQuotaError) {
+      setApiError({
+        message: 'YouTube API quota exceeded. Some features may be limited. Please try again later.',
+        timestamp: Date.now()
+      });
+    } else if (errorMessage.includes('API') || error?.error?.code === 403) {
+      setApiError({
+        message: 'YouTube API error. Some features may be limited.',
+        timestamp: Date.now()
+      });
+    }
+    setError(errorMessage || 'An error occurred');
+  }, []);
 
   const searchChannel = async (query: string) => {
     setLoading(true)
     setError(null)
     setSelectedVideo(null)
+
     try {
+      // Check cache first
+      const cachedResult = getCachedData(query, 'searches') as Channel | null;
+      if (cachedResult) {
+        setCurrentChannel(cachedResult);
+        setLoading(false);
+        return cachedResult;
+      }
+
       const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`)
       const data = await response.json()
       
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch videos')
+        throw new Error(data.error || data.message || 'Failed to fetch channel');
       }
       
+      // Cache the result
+      setCachedData(query, 'searches', data.channel);
       setCurrentChannel(data.channel)
-      setVideos(data.videos)
+      return data.channel
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-      setVideos([])
+      handleAPIError(err);
       setCurrentChannel(null)
+      return null
     } finally {
       setLoading(false)
     }
@@ -74,10 +161,18 @@ export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
 
   const selectVideo = async (video: Video) => {
     try {
-      // First set the basic video info we already have
       setSelectedVideo(video)
       
-      // Then fetch detailed information
+      // Check cache first
+      const cachedVideo = getCachedData(video.id, 'videos') as Video | null;
+      if (cachedVideo) {
+        setSelectedVideo(prevVideo => ({
+          ...prevVideo!,
+          ...cachedVideo
+        }));
+        return;
+      }
+
       const response = await fetch(`/api/youtube/video/${video.id}`)
       const data = await response.json()
       
@@ -85,26 +180,28 @@ export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.message || 'Failed to fetch video details')
       }
       
-      // Update the selected video with detailed information
+      // Cache the result
+      setCachedData(video.id, 'videos', data.video);
       setSelectedVideo(prevVideo => ({
         ...prevVideo!,
         ...data.video
       }))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load video details')
-      // Keep the basic video information even if details fetch fails
+      handleAPIError(err);
     }
   }
 
   return (
     <YouTubeContext.Provider value={{ 
-      videos, 
       loading, 
       error, 
       searchChannel, 
       selectedVideo, 
       selectVideo,
-      currentChannel 
+      currentChannel,
+      setCurrentChannel,
+      apiError,
+      handleAPIError
     }}>
       {children}
     </YouTubeContext.Provider>

@@ -10,13 +10,15 @@ interface FavoriteButtonProps {
   channelTitle: string;
   channelThumbnail: string;
   description: string;
+  customUrl?: string;
 }
 
 export default function FavoriteButton({ 
   channelId, 
   channelTitle, 
   channelThumbnail, 
-  description 
+  description,
+  customUrl
 }: FavoriteButtonProps) {
   const { data: session } = useSession();
   const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
@@ -96,6 +98,7 @@ export default function FavoriteButton({
           channelTitle,
           channelThumbnail,
           description,
+          customUrl,
         });
         setIsFavorite(true);
         toast({

@@ -1,4 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { google } from 'googleapis';
+import { NextRequest, NextResponse } from 'next/server';
+
+const youtube = google.youtube('v3');
 
 // This will need to be moved to an environment variable
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY
@@ -7,7 +10,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const query = searchParams.get('q')
 
-  if (!YOUTUBE_API_KEY) {
+  if (!process.env.YOUTUBE_API_KEY) {
     return NextResponse.json(
       { message: 'YouTube API key is not configured' },
       { status: 500 }
@@ -23,45 +26,48 @@ export async function GET(request: NextRequest) {
 
   try {
     // First, search for the channel
-    const channelResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(
-        query
-      )}&key=${YOUTUBE_API_KEY}`
-    )
+    const searchResponse = await youtube.search.list({
+      part: ['snippet'],
+      q: query,
+      type: ['channel'],
+      key: process.env.YOUTUBE_API_KEY,
+    });
 
-    const channelData = await channelResponse.json()
-    
-    if (!channelData.items?.length) {
+    if (!searchResponse.data.items?.length) {
       return NextResponse.json(
         { message: 'No channel found' },
         { status: 404 }
       )
     }
 
-    const channelId = channelData.items[0].id.channelId
-    const channelInfo = {
-      id: channelId,
-      title: channelData.items[0].snippet.title,
-      thumbnail: channelData.items[0].snippet.thumbnails.high?.url || channelData.items[0].snippet.thumbnails.medium.url,
-      description: channelData.items[0].snippet.description,
+    const channelId = searchResponse.data.items[0].id?.channelId;
+
+    // Get detailed channel information including custom URL
+    const channelResponse = await youtube.channels.list({
+      part: ['snippet', 'statistics'],
+      id: [channelId as string],
+      key: process.env.YOUTUBE_API_KEY,
+    });
+
+    const channel = channelResponse.data.items?.[0];
+    if (!channel) {
+      return NextResponse.json(
+        { message: 'Channel details not found' },
+        { status: 404 }
+      )
     }
 
-    // Then, get the channel's videos
-    const videosResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&order=date&maxResults=50&type=video&key=${YOUTUBE_API_KEY}`
-    )
-
-    const videosData = await videosResponse.json()
-
-    const videos = videosData.items.map((item: any) => ({
-      id: item.id.videoId,
-      title: item.snippet.title,
-      thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium.url,
-      publishedAt: item.snippet.publishedAt,
-      url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-    }))
-
-    return NextResponse.json({ channel: channelInfo, videos })
+    // Only return channel info, no videos
+    return NextResponse.json({
+      channel: {
+        id: channelId,
+        title: channel.snippet?.title,
+        thumbnail: channel.snippet?.thumbnails?.high?.url || channel.snippet?.thumbnails?.medium?.url,
+        description: channel.snippet?.description,
+        customUrl: channel.snippet?.customUrl,
+        subscriberCount: channel.statistics?.subscriberCount,
+      }
+    });
   } catch (error) {
     console.error('Error fetching YouTube data:', error)
     return NextResponse.json(
