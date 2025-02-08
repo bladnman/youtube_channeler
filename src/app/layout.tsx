@@ -1,27 +1,27 @@
-import { Inter } from 'next/font/google'
-import { Providers } from './providers.client'
-import { ColorMode } from './theme/ColorMode.client'
+import type { Metadata } from 'next';
+import { Header } from './features/layout/components/Header';
+import { Providers } from './providers';
 
-const inter = Inter({ subsets: ['latin'] })
-
-export const metadata = {
-  title: 'Next.js with Chakra UI',
-  description: 'A modern Next.js app with Chakra UI',
-}
+export const metadata: Metadata = {
+  title: 'Channel Surfer',
+  description: 'Your favorite YouTube channels in one place',
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
-      <head>
-        <ColorMode />
-      </head>
-      <body className={inter.className}>
-        <Providers>{children}</Providers>
+      <body>
+        <Providers>
+          <Header />
+          <main style={{ marginTop: '60px', padding: '20px' }}>
+            {children}
+          </main>
+        </Providers>
       </body>
     </html>
-  )
+  );
 }

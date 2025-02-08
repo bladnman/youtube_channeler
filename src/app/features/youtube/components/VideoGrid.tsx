@@ -45,7 +45,7 @@ export const VideoGrid = () => {
               cursor="pointer"
               onClick={() => selectVideo(video)}
               position="relative"
-              borderWidth="2px"
+              borderWidth={selectedVideo?.id === video.id ? "4px" : "0"}
               borderColor={selectedVideo?.id === video.id ? 'brand.500' : 'transparent'}
               _hover={{ transform: 'scale(1.02)' }}
             >
