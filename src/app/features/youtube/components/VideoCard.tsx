@@ -17,7 +17,7 @@ interface VideoCardProps {
 export const VideoCard = ({ video, isSelected, onSelect }: VideoCardProps) => {
   return (
     <Box
-      width={{ base: "full", sm: "280px" }}
+      width="320px"
       borderRadius="lg"
       overflow="hidden"
       shadow="md"
@@ -25,17 +25,28 @@ export const VideoCard = ({ video, isSelected, onSelect }: VideoCardProps) => {
       cursor="pointer"
       onClick={() => onSelect(video)}
       position="relative"
-      borderWidth={isSelected ? "4px" : "0"}
+      borderWidth={isSelected ? "2px" : "0"}
       borderColor={isSelected ? 'brand.500' : 'transparent'}
+      bg="white"
+      _dark={{ bg: 'gray.800' }}
       _hover={{ transform: 'scale(1.02)' }}
     >
-      <Image
-        src={video.thumbnail}
-        alt={video.title}
+      <Box
+        position="relative"
         width="100%"
-        height="auto"
-        objectFit="cover"
-      />
+        paddingTop="56.25%" // 16:9 aspect ratio
+      >
+        <Image
+          src={video.thumbnail}
+          alt={video.title}
+          position="absolute"
+          top={0}
+          left={0}
+          width="100%"
+          height="100%"
+          objectFit="cover"
+        />
+      </Box>
       <Box p={4}>
         <Text fontWeight="semibold" noOfLines={2}>
           {video.title}

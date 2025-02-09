@@ -1,0 +1,7 @@
+---
+description: Magic Numbers in a Const file
+globs: *.tsx, *.css
+---
+## CONSTS
+- We do not want magic numbers laying around, they should be pulled out into a consts file
+- Keep the consts organized, there is often a difference between UI consts and service consts

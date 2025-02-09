@@ -1,19 +1,29 @@
-import { google } from 'googleapis'
-import { NextResponse } from 'next/server'
+import { CACHE_KEYS } from '@/app/constants/services';
+import ServerCache from '@/app/utils/serverCache';
+import { google } from 'googleapis';
+import { NextRequest, NextResponse } from 'next/server';
 
 const youtube = google.youtube('v3')
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const videoId = params.id
+  const { id: videoId } = await context.params;
 
+  try {
     if (!process.env.YOUTUBE_API_KEY) {
       throw new Error('YouTube API key is not configured')
     }
 
+    // Check cache first
+    const cachedVideo = ServerCache.get(`${CACHE_KEYS.VIDEO_PREFIX}${videoId}`);
+    if (cachedVideo) {
+      console.log(`✅ Cache hit: Using cached data for video "${videoId}"`);
+      return NextResponse.json({ video: cachedVideo });
+    }
+
+    console.log(`🎬 YouTube API: Fetching video details for "${videoId}"`);
     const response = await youtube.videos.list({
       key: process.env.YOUTUBE_API_KEY,
       id: [videoId],
@@ -52,6 +62,10 @@ export async function GET(
       likeCount: videoData.statistics?.likeCount,
       url: `https://www.youtube.com/watch?v=${videoData.id}`
     }
+
+    // Cache the video data
+    ServerCache.set(`${CACHE_KEYS.VIDEO_PREFIX}${videoId}`, video);
+    console.log(`💾 Cached video data for "${videoId}"`);
 
     return NextResponse.json({ video })
   } catch (error) {

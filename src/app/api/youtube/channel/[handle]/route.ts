@@ -1,42 +1,59 @@
+import { CACHE_KEYS, YOUTUBE_API } from '@/app/constants/services';
+import ServerCache from '@/app/utils/serverCache';
 import { google } from 'googleapis';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const youtube = google.youtube('v3');
 
 export async function GET(
-  request: Request,
-  { params }: { params: { handle: string } }
+  request: NextRequest,
+  context: { params: Promise<{ handle: string }> }
 ) {
+  const { handle } = await context.params;
+  let channelId = handle;
+
   try {
-    const handle = params.handle;
-    let channelId = handle;
-
-    // If the handle starts with @, we need to search for the channel first
+    // Check cache for channel ID if it's a handle
     if (handle.startsWith('@')) {
-      try {
-        const searchResponse = await youtube.search.list({
-          part: ['snippet'],
-          q: handle,
-          type: ['channel'],
-          key: process.env.YOUTUBE_API_KEY,
-        });
+      const cachedChannelId = ServerCache.get(`${CACHE_KEYS.HANDLE_PREFIX}${handle}`);
+      if (cachedChannelId) {
+        channelId = cachedChannelId;
+      } else {
+        try {
+          console.log(`🔍 YouTube API: Searching for channel handle "${handle}"`);
+          const searchResponse = await youtube.search.list({
+            part: ['snippet'],
+            q: handle,
+            type: ['channel'],
+            key: process.env.YOUTUBE_API_KEY,
+          });
 
-        if (!searchResponse.data.items?.[0]) {
-          return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
+          if (!searchResponse.data.items?.[0]) {
+            return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
+          }
+
+          channelId = searchResponse.data.items[0].id?.channelId as string;
+          // Cache the channel ID for this handle
+          ServerCache.set(`${CACHE_KEYS.HANDLE_PREFIX}${handle}`, channelId);
+        } catch (error: any) {
+          return NextResponse.json(
+            { error: error.message || 'YouTube API Error' },
+            { status: error.code || 500 }
+          );
         }
-
-        channelId = searchResponse.data.items[0].id?.channelId as string;
-      } catch (error: any) {
-        // Pass through the YouTube API error
-        return NextResponse.json(
-          { error: error.message || 'YouTube API Error' },
-          { status: error.code || 500 }
-        );
       }
+    }
+
+    // Check cache for channel data
+    const cachedChannelData = ServerCache.get(`${CACHE_KEYS.CHANNEL_PREFIX}${channelId}`);
+    if (cachedChannelData) {
+      console.log(`✅ Cache hit: Using cached data for channel "${channelId}"`);
+      return NextResponse.json(cachedChannelData);
     }
 
     try {
       // Get channel details
+      console.log(`📺 YouTube API: Fetching channel details for "${channelId}"`);
       const channelResponse = await youtube.channels.list({
         part: ['snippet', 'statistics', 'contentDetails'],
         id: [channelId],
@@ -49,16 +66,17 @@ export async function GET(
       }
 
       // Get channel's videos
+      console.log(`🎥 YouTube API: Fetching latest ${YOUTUBE_API.MAX_RESULTS} videos for channel "${channelId}"`);
       const videosResponse = await youtube.search.list({
         part: ['snippet'],
         channelId: channelId,
-        maxResults: 50,
+        maxResults: YOUTUBE_API.MAX_RESULTS,
         order: 'date',
         type: ['video'],
         key: process.env.YOUTUBE_API_KEY,
       });
 
-      return NextResponse.json({
+      const responseData = {
         id: channel.id,
         title: channel.snippet?.title,
         description: channel.snippet?.description,
@@ -72,7 +90,13 @@ export async function GET(
           thumbnail: item.snippet?.thumbnails?.medium?.url,
           publishedAt: item.snippet?.publishedAt,
         })),
-      });
+      };
+
+      // Cache the channel data
+      ServerCache.set(`${CACHE_KEYS.CHANNEL_PREFIX}${channelId}`, responseData);
+      console.log(`💾 Cached channel data for "${channelId}"`);
+
+      return NextResponse.json(responseData);
     } catch (error: any) {
       // Pass through the YouTube API error
       return NextResponse.json(
