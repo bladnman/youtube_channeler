@@ -14,10 +14,34 @@ interface VideoCardProps {
   onSelect: (video: Video) => void
 }
 
+const formatPublishedDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  const intervals = {
+    year: 31536000,
+    month: 2592000,
+    week: 604800,
+    day: 86400,
+    hour: 3600,
+    minute: 60
+  };
+
+  for (const [unit, seconds] of Object.entries(intervals)) {
+    const interval = Math.floor(diffInSeconds / seconds);
+    if (interval >= 1) {
+      return `${interval} ${unit}${interval === 1 ? '' : 's'} ago`;
+    }
+  }
+  
+  return 'Just now';
+};
+
 export const VideoCard = ({ video, isSelected, onSelect }: VideoCardProps) => {
   return (
     <Box
-      width="320px"
+      width="full"
       borderRadius="lg"
       overflow="hidden"
       shadow="md"
@@ -25,11 +49,17 @@ export const VideoCard = ({ video, isSelected, onSelect }: VideoCardProps) => {
       cursor="pointer"
       onClick={() => onSelect(video)}
       position="relative"
-      borderWidth={isSelected ? "2px" : "0"}
+      borderWidth={isSelected ? "3px" : "1px"}
       borderColor={isSelected ? 'brand.500' : 'transparent'}
       bg="white"
       _dark={{ bg: 'gray.800' }}
-      _hover={{ transform: 'scale(1.02)' }}
+      _hover={{ 
+        transform: 'scale(1.02)',
+        borderColor: isSelected ? 'brand.500' : 'brand.200',
+        _dark: {
+          borderColor: isSelected ? 'brand.500' : 'brand.700'
+        }
+      }}
     >
       <Box
         position="relative"
@@ -47,12 +77,21 @@ export const VideoCard = ({ video, isSelected, onSelect }: VideoCardProps) => {
           objectFit="cover"
         />
       </Box>
-      <Box p={4}>
-        <Text fontWeight="semibold" noOfLines={2}>
+      <Box p={3}>
+        <Text 
+          fontWeight="semibold" 
+          noOfLines={2}
+          fontSize="sm"
+        >
           {video.title}
         </Text>
-        <Text fontSize="sm" color="gray.600" mt={2}>
-          {new Date(video.publishedAt).toLocaleDateString()}
+        <Text 
+          fontSize="xs" 
+          color="gray.600" 
+          _dark={{ color: 'gray.400' }}
+          mt={2}
+        >
+          {formatPublishedDate(video.publishedAt)}
         </Text>
       </Box>
     </Box>

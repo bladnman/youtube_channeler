@@ -12,9 +12,11 @@ export function VideoGridLayout({ children, hasDetails }: VideoGridLayoutProps) 
       display="grid"
       gridTemplateColumns={{
         base: "1fr", // Mobile: single column
-        md: "repeat(auto-fit, 320px)", // Tablet and up: auto-fit 320px columns
+        sm: "repeat(auto-fit, minmax(240px, 1fr))", // Small screens: 240px minimum
+        md: "repeat(auto-fit, minmax(260px, 1fr))", // Medium screens: 260px minimum
+        lg: hasDetails ? "repeat(auto-fit, minmax(260px, 1fr))" : "repeat(auto-fit, minmax(280px, 1fr))", // Large screens
       }}
-      gap={6}
+      gap={4}
       p={4}
       justifyContent="center"
     >
