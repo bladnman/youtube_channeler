@@ -37,6 +37,7 @@ interface Channel {
   description: string
   customUrl?: string
   subscriberCount?: string
+  videos?: Video[]
 }
 
 interface APIError {

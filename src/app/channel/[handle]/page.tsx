@@ -5,92 +5,83 @@ import { VideoGrid } from '@/app/features/youtube/components/VideoGrid';
 import { useYouTubeContext } from '@/app/features/youtube/context/YouTubeContext';
 import { Box, Container, Fade, Flex, HStack, Spinner, Text } from '@chakra-ui/react';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-
-interface Video {
-  id: string;
-  title: string;
-  thumbnail: string;
-  publishedAt: string;
-  description?: string;
-}
-
-interface ChannelData {
-  id: string;
-  title: string;
-  thumbnail: string;
-  description: string;
-  subscriberCount: string;
-  videos: Video[];
-  customUrl: string;
-}
+import { useCallback, useEffect, useRef } from 'react';
 
 function ChannelPageLoading() {
   return (
-    <Flex align="center" justify="center" minHeight="70vh">
-      <Fade in={true} transition={{ enter: { duration: 0.5 } }}>
-        <Spinner thickness="4px" speed="0.65s" emptyColor="gray.200" color="brand.500" size="xl" />
-      </Fade>
+    <Flex justify="center" align="center" minH="50vh">
+      <Spinner size="xl" color="brand.500" thickness="4px" />
     </Flex>
   );
 }
 
 function ChannelPageContent() {
   const params = useParams();
-  const [channelData, setChannelData] = useState<ChannelData | null>(null);
-  const { setCurrentChannel, handleAPIError, clearSelectedVideo } = useYouTubeContext();
+  const { 
+    setCurrentChannel, 
+    handleAPIError, 
+    clearSelectedVideo, 
+    selectVideo,
+    currentChannel,
+    selectedVideo
+  } = useYouTubeContext();
   const handle = params.handle as string;
+  const hasSelectedFirstVideo = useRef(false);
 
-  useEffect(() => {
-    const fetchChannelData = async () => {
-      try {
-        const response = await fetch(`/api/youtube/channel/${handle}`);
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch channel');
-        }
-        
-        setChannelData(data);
-        
-        // Set the channel in the context
-        const channelInfo = { ...data };
-        delete channelInfo.videos;
-        setCurrentChannel(channelInfo);
-      } catch (error) {
-        console.error('Error fetching channel data:', error);
-        if (error instanceof Error) {
-          handleAPIError(error);
-        }
+  const fetchChannelData = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/youtube/channel/${handle}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch channel');
       }
-    };
-
-    if (handle) {
-      void fetchChannelData();
+      
+      setCurrentChannel(data);
+    } catch (error) {
+      console.error('Error fetching channel data:', error);
+      if (error instanceof Error) {
+        handleAPIError(error);
+      }
     }
+  }, [handle, setCurrentChannel, handleAPIError]);
 
-    // Clean up the context when unmounting
+  // Effect for fetching channel data
+  useEffect(() => {
+    hasSelectedFirstVideo.current = false;
+    void fetchChannelData();
+
     return () => {
       setCurrentChannel(null);
       clearSelectedVideo();
+      hasSelectedFirstVideo.current = false;
     };
-  }, [handle, setCurrentChannel, handleAPIError, clearSelectedVideo]);
+  }, [handle, fetchChannelData, clearSelectedVideo, setCurrentChannel]);
 
-  if (!channelData) {
+  // Effect for handling initial video selection
+  useEffect(() => {
+    const videos = currentChannel?.videos;
+    const firstVideo = videos?.[0];
+
+    if (!hasSelectedFirstVideo.current && firstVideo && !selectedVideo) {
+      hasSelectedFirstVideo.current = true;
+      void selectVideo(firstVideo);
+    }
+  }, [currentChannel, selectedVideo, selectVideo]);
+
+  if (!currentChannel) {
     return <ChannelPageLoading />;
   }
-
-  const { videos, ...channelInfo } = channelData;
 
   return (
     <Container maxW="container.xl">
       <Box py={4}>
         <Flex alignItems="center" mb={8}>
-          {channelData.thumbnail && (
+          {currentChannel.thumbnail && (
             <Box
               as="img"
-              src={channelData.thumbnail}
-              alt={channelData.title}
+              src={currentChannel.thumbnail}
+              alt={currentChannel.title}
               boxSize="80px"
               borderRadius="full"
               mr={4}
@@ -99,17 +90,17 @@ function ChannelPageContent() {
           <Box flex={1}>
             <HStack justify="space-between" align="start" width="100%">
               <Box>
-                <Text fontSize="2xl" fontWeight="bold">{channelData.title}</Text>
+                <Text fontSize="2xl" fontWeight="bold">{currentChannel.title}</Text>
                 <Text color="gray.600">
-                  {channelData.subscriberCount} subscribers
+                  {currentChannel.subscriberCount} subscribers
                 </Text>
               </Box>
               <FavoriteButton
-                channelId={channelData.id}
-                channelTitle={channelData.title}
-                channelThumbnail={channelData.thumbnail}
-                description={channelData.description}
-                customUrl={channelData.customUrl}
+                channelId={currentChannel.id}
+                channelTitle={currentChannel.title}
+                channelThumbnail={currentChannel.thumbnail}
+                description={currentChannel.description}
+                customUrl={currentChannel.customUrl}
               />
             </HStack>
           </Box>
@@ -117,9 +108,9 @@ function ChannelPageContent() {
 
         <Text fontSize="xl" fontWeight="semibold" mb={4}>Videos</Text>
         <VideoGrid 
-          videos={videos} 
+          videos={currentChannel.videos || []} 
           hideChannelInfo 
-          currentChannel={channelInfo}
+          currentChannel={currentChannel}
         />
       </Box>
     </Container>
@@ -127,5 +118,9 @@ function ChannelPageContent() {
 }
 
 export default function ChannelPage() {
-  return <ChannelPageContent />;
+  return (
+    <Fade in>
+      <ChannelPageContent />
+    </Fade>
+  );
 } 

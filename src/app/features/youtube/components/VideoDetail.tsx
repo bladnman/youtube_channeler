@@ -116,22 +116,24 @@ export const VideoDetail = () => {
   return (
     <Box
       p={{ base: 4, md: 6 }}
-      borderLeft="1px"
-      borderColor="gray.200"
       height="100%"
       overflowY="auto"
       overflowX="hidden"
+      bg="white"
+      _dark={{ bg: 'gray.800' }}
     >
       <VStack spacing={{ base: 4, md: 6 }} align="stretch">
         <Box
           position="relative"
           width="100%"
           paddingTop="56.25%"  // 16:9 aspect ratio
+          borderRadius="xl"
+          overflow="hidden"
+          shadow="lg"
         >
           <Image
             src={selectedVideo.thumbnail}
             alt={selectedVideo.title}
-            borderRadius="lg"
             position="absolute"
             top={0}
             left={0}
@@ -142,7 +144,7 @@ export const VideoDetail = () => {
         </Box>
         
         <Stack spacing={{ base: 3, md: 4 }} maxW="850px" mx="auto" w="100%">
-          <Box display="flex" alignItems="flex-start" gap={2}>
+          <Box display="flex" alignItems="flex-start" gap={3}>
             <Heading size="md" flex={1}>{selectedVideo.title}</Heading>
             <Tooltip 
               label="Copy video info" 
@@ -161,12 +163,26 @@ export const VideoDetail = () => {
           </Box>
           
           {selectedVideo.channelTitle && (
-            <Text fontSize="md" color="gray.700" fontWeight="medium">
+            <Text fontSize="md" color="gray.600" fontWeight="medium">
               {selectedVideo.channelTitle}
             </Text>
           )}
           
-          <Stack direction={{ base: 'column', md: 'row' }} spacing={4} color="gray.600">
+          <Stack 
+            direction={{ base: 'column', sm: 'row' }} 
+            spacing={{ base: 2, sm: 4 }} 
+            color="gray.600"
+            fontSize="sm"
+            divider={
+              <Box 
+                display={{ base: 'none', sm: 'block' }} 
+                as="span" 
+                color="gray.400"
+              >
+                •
+              </Box>
+            }
+          >
             {selectedVideo.viewCount && (
               <Text>👁️ {formatNumber(selectedVideo.viewCount)} views</Text>
             )}
@@ -176,11 +192,8 @@ export const VideoDetail = () => {
             {selectedVideo.duration && (
               <Text>⏱️ {selectedVideo.duration}</Text>
             )}
+            <Text>📅 {new Date(selectedVideo.publishedAt).toLocaleDateString()}</Text>
           </Stack>
-          
-          <Text color="gray.600">
-            📅 Published {new Date(selectedVideo.publishedAt).toLocaleDateString()}
-          </Text>
           
           <Button
             as="a"
@@ -189,13 +202,15 @@ export const VideoDetail = () => {
             rel="noopener noreferrer"
             colorScheme="brand"
             leftIcon={<span>▶️</span>}
-            size="lg"
+            size="md"
+            width="full"
           >
             Watch on YouTube
           </Button>
           
           <Tabs 
-            variant="enclosed" 
+            variant="line" 
+            colorScheme="brand"
             mt={2} 
             index={tabIndex}
             onChange={(index) => {
@@ -210,8 +225,7 @@ export const VideoDetail = () => {
               <Tab>Transcript</Tab>
             </TabList>
             <TabPanels>
-              <TabPanel>
-                <Heading size="sm" mb={3}>Description</Heading>
+              <TabPanel px={0}>
                 <Box color="gray.700">
                   {loading ? (
                     <Stack spacing={2}>
@@ -224,13 +238,12 @@ export const VideoDetail = () => {
                   )}
                 </Box>
               </TabPanel>
-              <TabPanel>
+              <TabPanel px={0}>
                 {loadingTranscript ? (
                   <LoadingSpinner spinnerSize="md" minHeight="100px" fadeDuration={0.5} />
                 ) : transcript ? (
-                  <Box mt={4}>
-                    <Heading size="sm" mb={2}>Transcript</Heading>
-                    <Text whiteSpace="pre-wrap" color="gray.700">
+                  <Box>
+                    <Text whiteSpace="pre-wrap" color="gray.700" fontSize="sm">
                       {transcript}
                     </Text>
                   </Box>
