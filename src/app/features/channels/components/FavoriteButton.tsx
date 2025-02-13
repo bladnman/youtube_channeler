@@ -1,7 +1,10 @@
+'use client';
+
+import { GlassmorphicButton } from '@/app/components/GlassmorphicButton';
 import { useFirebaseAuth } from '@/app/hooks/useFirebaseAuth';
 import { addFavoriteChannel, getFavoriteChannels, removeFavoriteChannel } from '@/app/models/FavoriteChannel';
 import { StarIcon } from '@chakra-ui/icons';
-import { IconButton, Spinner, Tooltip, useToast } from '@chakra-ui/react';
+import { Spinner, Tooltip, useToast } from '@chakra-ui/react';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
@@ -129,13 +132,15 @@ export default function FavoriteButton({
 
   return (
     <Tooltip label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}>
-      <IconButton
+      <GlassmorphicButton
         aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-        icon={<StarIcon />}
         colorScheme={isFavorite ? 'yellow' : 'gray'}
         onClick={handleToggleFavorite}
         size="md"
-      />
+        glassStrength={isFavorite ? 'strong' : 'medium'}
+      >
+        <StarIcon />
+      </GlassmorphicButton>
     </Tooltip>
   );
 } 

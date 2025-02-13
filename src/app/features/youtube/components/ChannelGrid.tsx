@@ -16,7 +16,7 @@ export function ChannelGrid({ channels, onChannelClick }: ChannelGridProps) {
     if (onChannelClick) {
       onChannelClick(channel)
     } else {
-      router.push(`/channel/${channel.customUrl || channel.id}`)
+      router.push(`/channel-v2/${channel.customUrl || channel.id}`)
     }
   }
 

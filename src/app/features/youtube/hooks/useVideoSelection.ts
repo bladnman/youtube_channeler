@@ -1,25 +1,38 @@
-import { useYouTubeContext } from '../context/YouTubeContext'
+'use client';
 
-interface Video {
-  id: string
-  title: string
-  thumbnail: string
-  publishedAt: string
-  url?: string
-}
+import { useEffect, useRef } from 'react';
+import { Channel, useYouTubeContext } from '../context/YouTubeContext';
 
-export const useVideoSelection = () => {
-  const { selectedVideo, selectVideo } = useYouTubeContext()
+export function useVideoSelection(channel: Channel | null) {
+  const { 
+    clearSelectedVideo, 
+    selectVideo,
+    selectedVideo
+  } = useYouTubeContext();
+  const hasSelectedFirstVideo = useRef(false);
 
-  const handleVideoSelect = (video: Video) => {
-    void selectVideo({
-      ...video,
-      url: video.url || `https://www.youtube.com/watch?v=${video.id}`
-    })
-  }
+  // Reset selection when channel changes
+  useEffect(() => {
+    hasSelectedFirstVideo.current = false;
+    return () => {
+      clearSelectedVideo();
+      hasSelectedFirstVideo.current = false;
+    };
+  }, [channel?.id, clearSelectedVideo]);
+
+  // Auto-select first video when channel loads
+  useEffect(() => {
+    const videos = channel?.videos;
+    const firstVideo = videos?.[0];
+
+    if (!hasSelectedFirstVideo.current && firstVideo && !selectedVideo) {
+      hasSelectedFirstVideo.current = true;
+      void selectVideo(firstVideo);
+    }
+  }, [channel, selectedVideo, selectVideo]);
 
   return {
     selectedVideo,
-    handleVideoSelect
-  }
+    selectVideo
+  };
 } 

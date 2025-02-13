@@ -17,7 +17,7 @@ interface Cache {
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
 
-interface Video {
+export interface Video {
   id: string
   title: string
   thumbnail: string
@@ -28,9 +28,10 @@ interface Video {
   likeCount?: string
   viewCount?: string
   channelTitle?: string
+  subscriberCount?: string
 }
 
-interface Channel {
+export interface Channel {
   id: string
   title: string
   thumbnail: string

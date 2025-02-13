@@ -56,7 +56,7 @@ export function FavoritesMenu() {
   }, [loadFavorites, session, firebaseLoading]);
 
   const handleChannelClick = (channel: FavoriteChannel) => {
-    router.push(`/channel/${channel.customUrl || channel.channelId}`);
+    router.push(`/channel-v2/${channel.customUrl || channel.channelId}`);
   };
 
   if (!session) return null;

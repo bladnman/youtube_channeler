@@ -19,9 +19,9 @@ export const SearchBar = ({ variant = 'default' }: SearchBarProps) => {
       try {
         const channelData = await searchChannel(searchInput.trim())
         if (channelData?.customUrl) {
-          await router.push(`/channel/${channelData.customUrl}`)
+          await router.push(`/channel-v2/${channelData.customUrl}`)
         } else if (channelData?.id) {
-          await router.push(`/channel/${channelData.id}`)
+          await router.push(`/channel-v2/${channelData.id}`)
         }
       } catch (error) {
         console.error('Error searching for channel:', error)

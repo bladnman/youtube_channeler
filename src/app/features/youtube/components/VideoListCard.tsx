@@ -1,19 +1,11 @@
-import { Box, Flex, Image, Stack, Text } from '@chakra-ui/react'
-
-interface Video {
-  id: string
-  title: string
-  thumbnail: string
-  publishedAt: string
-  url?: string
-  duration?: string
-  viewCount?: string
-}
+import { Box, Flex, Text } from '@chakra-ui/react'
+import type { Video } from '../context/YouTubeContext'
 
 interface VideoListCardProps {
   video: Video
-  isSelected: boolean
-  onSelect: (video: Video) => void
+  isSelected?: boolean
+  onSelect?: (video: Video) => void
+  hideChannelInfo?: boolean
 }
 
 const formatPublishedDate = (dateString: string) => {
@@ -47,91 +39,71 @@ const formatNumber = (num?: string) => {
   return new Intl.NumberFormat('en-US', { notation: 'compact' }).format(n);
 };
 
-export const VideoListCard = ({ video, isSelected, onSelect }: VideoListCardProps) => {
+export const VideoListCard = ({ video, isSelected, onSelect, hideChannelInfo }: VideoListCardProps) => {
   return (
-    <Flex
-      width="full"
-      borderRadius="lg"
-      overflow="hidden"
-      shadow="sm"
-      transition="all 0.2s"
+    <Box
+      onClick={() => onSelect?.(video)}
       cursor="pointer"
-      onClick={() => onSelect(video)}
-      position="relative"
-      borderWidth={isSelected ? "2px" : "1px"}
-      borderColor={isSelected ? 'brand.500' : 'gray.200'}
-      bg="white"
-      _dark={{ 
-        bg: 'gray.800',
-        borderColor: isSelected ? 'brand.500' : 'gray.700'
-      }}
-      _hover={{ 
-        transform: 'translateY(-2px)',
-        shadow: 'md',
-        borderColor: isSelected ? 'brand.500' : 'brand.200',
-        _dark: {
-          borderColor: isSelected ? 'brand.500' : 'brand.700'
-        }
+      borderRadius="md"
+      overflow="hidden"
+      transition="all 0.2s"
+      backgroundColor={isSelected ? "rgba(255, 255, 255, 0.15)" : "transparent"}
+      _hover={{
+        backgroundColor: "rgba(255, 255, 255, 0.1)"
       }}
       p={2}
-      gap={3}
-      align="center"
     >
-      <Box
-        position="relative"
-        width="180px"
-        height="100px"
-        flexShrink={0}
-        borderRadius="md"
-        overflow="hidden"
-      >
-        <Image
-          src={video.thumbnail}
-          alt={video.title}
-          width="100%"
-          height="100%"
-          objectFit="cover"
-        />
-        {video.duration && (
+      <Flex gap={3}>
+        <Box width="180px" height="100px" position="relative" flexShrink={0}>
           <Box
-            position="absolute"
-            bottom={1}
-            right={1}
-            bg="blackAlpha.700"
-            color="white"
-            px={1.5}
-            py={0.5}
-            borderRadius="sm"
-            fontSize="xs"
-            fontWeight="medium"
-          >
-            {video.duration}
-          </Box>
-        )}
-      </Box>
-      
-      <Stack spacing={1} flex={1} minW={0}>
-        <Text 
-          fontWeight="semibold" 
-          noOfLines={2}
-          fontSize="sm"
-        >
-          {video.title}
-        </Text>
-        <Stack 
-          direction="row" 
-          spacing={2} 
-          fontSize="xs"
-          color="gray.600"
-          _dark={{ color: 'gray.400' }}
-        >
-          {video.viewCount && (
-            <Text>{formatNumber(video.viewCount)} views</Text>
+            as="img"
+            src={video.thumbnail}
+            alt={video.title}
+            width="100%"
+            height="100%"
+            objectFit="cover"
+            borderRadius="md"
+          />
+          {video.duration && (
+            <Box
+              position="absolute"
+              bottom={2}
+              right={2}
+              bg="rgba(0, 0, 0, 0.8)"
+              color="white"
+              px={1.5}
+              py={0.5}
+              borderRadius="sm"
+              fontSize="xs"
+            >
+              {video.duration}
+            </Box>
           )}
-          <Text>•</Text>
-          <Text>{formatPublishedDate(video.publishedAt)}</Text>
-        </Stack>
-      </Stack>
-    </Flex>
-  )
-} 
+        </Box>
+        <Box flex={1}>
+          <Text fontSize="md" fontWeight="semibold" mb={1} noOfLines={2}>
+            {video.title}
+          </Text>
+          <Flex direction="column" gap={0.5}>
+            {!hideChannelInfo && video.channelTitle && (
+              <Text color="gray.600" fontSize="sm">
+                {video.channelTitle}
+              </Text>
+            )}
+            <Flex gap={2} fontSize="sm" color="gray.500">
+              {video.viewCount && (
+                <Text>{formatNumber(video.viewCount)} views</Text>
+              )}
+              {video.publishedAt && (
+                <>
+                  <Text>•</Text>
+                  <Text>{formatPublishedDate(video.publishedAt)}</Text>
+                </>
+              )}
+            </Flex>
+          </Flex>
+        </Box>
+      </Flex>
+    </Box>
+  );
+}; 

@@ -123,7 +123,7 @@ export default function FavoriteChannelsGrid() {
           >
             <ChannelCard
               channel={channel}
-              onClick={() => router.push(`/channel/${channel.customUrl || channel.channelId}`)}
+              onClick={() => router.push(`/channel-v2/${channel.customUrl || channel.channelId}`)}
             />
           </Box>
         ))}
