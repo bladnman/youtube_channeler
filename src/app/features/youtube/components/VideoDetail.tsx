@@ -2,8 +2,8 @@
 
 import { copyToClipboard, generateVideoMarkdown } from '@/app/utils/copyToClipboard'
 import { CopyIcon } from '@chakra-ui/icons'
-import { Box, Button, Heading, IconButton, Image, Link, Skeleton, Stack, Text, Tooltip, VStack, useToast } from '@chakra-ui/react'
-import { useMemo } from 'react'
+import { Box, Button, Heading, IconButton, Image, Link, Skeleton, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, Tooltip, VStack, useToast } from '@chakra-ui/react'
+import { useMemo, useState } from 'react'
 import { useYouTubeContext } from '../context/YouTubeContext'
 
 const formatNumber = (num?: string) => {
@@ -45,6 +45,49 @@ const formatDescription = (description: string = '') => {
 export const VideoDetail = () => {
   const { selectedVideo, loading } = useYouTubeContext()
   const toast = useToast()
+  const [transcript, setTranscript] = useState<string | null>(null);
+  const [loadingTranscript, setLoadingTranscript] = useState(false);
+  
+  const handleTranscript = async () => {
+    if (!selectedVideo) return;
+    setLoadingTranscript(true);
+    try {
+      console.log('Fetching transcript for video:', selectedVideo.id);
+      const response = await fetch(`/api/transcript?videoId=${selectedVideo.id}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log('Transcript loaded successfully');
+        setTranscript(data.transcript);
+        toast({
+          title: 'Transcript loaded',
+          status: 'success',
+          duration: 2000,
+          isClosable: true
+        });
+      } else {
+        console.error('Failed to fetch transcript:', data.error);
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to fetch transcript',
+          status: 'error',
+          duration: 3000,
+          isClosable: true
+        });
+      }
+    } catch (error) {
+      console.error('Error in handleTranscript:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch transcript. Please try again later.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true
+      });
+    } finally {
+      setLoadingTranscript(false);
+    }
+  };
   
   const formattedDescription = useMemo(() => {
     return formatDescription(selectedVideo?.description)
@@ -149,20 +192,47 @@ export const VideoDetail = () => {
             Watch on YouTube
           </Button>
           
-          <Box>
-            <Heading size="sm" mb={3}>Description</Heading>
-            <Box color="gray.700">
-              {loading ? (
-                <Stack spacing={2}>
-                  <Skeleton height="20px" />
-                  <Skeleton height="20px" />
-                  <Skeleton height="20px" />
-                </Stack>
-              ) : (
-                formattedDescription
-              )}
-            </Box>
-          </Box>
+          <Tabs variant="enclosed" mt={2}>
+            <TabList>
+              <Tab>Description</Tab>
+              <Tab>Transcript</Tab>
+            </TabList>
+            <TabPanels>
+              <TabPanel>
+                <Heading size="sm" mb={3}>Description</Heading>
+                <Box color="gray.700">
+                  {loading ? (
+                    <Stack spacing={2}>
+                      <Skeleton height="20px" />
+                      <Skeleton height="20px" />
+                      <Skeleton height="20px" />
+                    </Stack>
+                  ) : (
+                    formattedDescription
+                  )}
+                </Box>
+              </TabPanel>
+              <TabPanel>
+                <Button
+                  onClick={handleTranscript}
+                  colorScheme="brand"
+                  size="lg"
+                  isLoading={loadingTranscript}
+                  mb={2}
+                >
+                  {transcript ? "Refresh Transcript" : "Load Transcript"}
+                </Button>
+                {transcript && (
+                  <Box mt={4}>
+                    <Heading size="sm" mb={2}>Transcript</Heading>
+                    <Text whiteSpace="pre-wrap" color="gray.700">
+                      {transcript}
+                    </Text>
+                  </Box>
+                )}
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
         </Stack>
       </VStack>
     </Box>
