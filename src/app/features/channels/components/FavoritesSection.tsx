@@ -3,7 +3,8 @@
  * Renders the favorites grid section with glassmorphism effects and custom scrollbar
  */
 
-import { GLASSMORPHISM, LAYOUT, SCROLLBAR } from '@/app/constants/ui';
+import { GlassmorphicPanel } from '@/app/components/GlassmorphicPanel';
+import { LAYOUT, SCROLLBAR } from '@/app/constants/ui';
 import { Box, useBreakpointValue } from '@chakra-ui/react';
 import FavoriteChannelsGrid from './FavoriteChannelsGrid';
 
@@ -23,24 +24,17 @@ export const FavoritesSection = () => {
       justifyContent="center"
       h={favoritesHeight}
     >
-      <Box
+      <GlassmorphicPanel
         maxW={{ 
           base: LAYOUT.CONTAINER_MAX_WIDTH.BASE, 
           md: LAYOUT.CONTAINER_MAX_WIDTH.MD, 
           lg: LAYOUT.CONTAINER_MAX_WIDTH.LG 
         }}
         w="full"
-        bg={GLASSMORPHISM.BACKGROUND.LIGHT}
-        backdropFilter={`blur(${GLASSMORPHISM.BLUR})`}
-        borderTop={`1px solid ${GLASSMORPHISM.BORDER.LIGHT}`}
-        borderTopLeftRadius="2xl"
-        borderTopRightRadius="2xl"
-        boxShadow="xl"
-        overflow="hidden"
-        _dark={{
-          bg: GLASSMORPHISM.BACKGROUND.DARK,
-          borderColor: GLASSMORPHISM.BORDER.DARK
-        }}
+        variant="light"
+        blurStrength="medium"
+        borderRadius="2xl"
+        borderBottomRadius="none"
       >
         <Box
           h="full"
@@ -64,7 +58,7 @@ export const FavoritesSection = () => {
             <FavoriteChannelsGrid />
           </Box>
         </Box>
-      </Box>
+      </GlassmorphicPanel>
     </Box>
   );
 }; 

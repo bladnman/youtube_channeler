@@ -3,6 +3,7 @@ import { ChakraHead } from './features/layout/components/ChakraHead';
 import { LayoutContent } from './features/layout/components/LayoutContent';
 import { RootClientWrapper } from './features/layout/components/RootClientWrapper';
 import { YouTubeProvider } from './features/youtube/context/YouTubeContext';
+import './globals.css';
 import RootStyleRegistry from './registry';
 
 export const metadata: Metadata = {
@@ -20,11 +21,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ background: 'transparent' }}>
       <head>
         <ChakraHead />
       </head>
-      <body>
+      <body style={{ background: 'transparent' }}>
         <RootStyleRegistry>
           <RootClientWrapper>
             <YouTubeProvider>

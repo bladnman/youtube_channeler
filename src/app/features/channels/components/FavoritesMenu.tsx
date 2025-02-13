@@ -13,6 +13,7 @@ import {
     MenuDivider,
     MenuItem,
     MenuList,
+    Portal,
     Text,
     useToast
 } from '@chakra-ui/react';
@@ -70,38 +71,59 @@ export function FavoritesMenu() {
         variant="ghost"
         size="sm"
         isLoading={loading}
+        color="white"
+        _hover={{ bg: 'whiteAlpha.200' }}
+        _active={{ bg: 'whiteAlpha.300' }}
       >
         Favorites
       </MenuButton>
-      <MenuList maxH="400px" overflowY="auto">
-        {favorites.length === 0 ? (
-          <Box p={4}>
-            <Text color="gray.500">No favorite channels yet</Text>
-          </Box>
-        ) : (
-          <>
-            {favorites.map((channel) => (
-              <MenuItem
-                key={channel.channelId}
-                onClick={() => handleChannelClick(channel)}
+      <Portal>
+        <MenuList
+          bg="rgba(0, 0, 0, 0.8)"
+          borderColor="rgba(255, 255, 255, 0.1)"
+          boxShadow="0 8px 32px rgba(0, 0, 0, 0.2)"
+          backdropFilter="blur(10px)"
+          maxH="400px"
+          overflowY="auto"
+          style={{ zIndex: 9999 }}
+        >
+          {favorites.length === 0 ? (
+            <Box p={4}>
+              <Text color="whiteAlpha.700">No favorite channels yet</Text>
+            </Box>
+          ) : (
+            <>
+              {favorites.map((channel) => (
+                <MenuItem
+                  key={channel.channelId}
+                  onClick={() => handleChannelClick(channel)}
+                  _hover={{ bg: 'whiteAlpha.200' }}
+                  bg="transparent"
+                  color="white"
+                >
+                  <HStack spacing={3}>
+                    <Avatar
+                      size="sm"
+                      src={channel.channelThumbnail}
+                      name={channel.channelTitle}
+                    />
+                    <Text noOfLines={1}>{channel.channelTitle}</Text>
+                  </HStack>
+                </MenuItem>
+              ))}
+              <MenuDivider borderColor="whiteAlpha.200" />
+              <MenuItem 
+                onClick={() => router.push('/')}
+                _hover={{ bg: 'whiteAlpha.200' }}
+                bg="transparent"
+                color="white"
               >
-                <HStack spacing={3}>
-                  <Avatar
-                    size="sm"
-                    src={channel.channelThumbnail}
-                    name={channel.channelTitle}
-                  />
-                  <Text noOfLines={1}>{channel.channelTitle}</Text>
-                </HStack>
+                View All Favorites
               </MenuItem>
-            ))}
-            <MenuDivider />
-            <MenuItem onClick={() => router.push('/')}>
-              View All Favorites
-            </MenuItem>
-          </>
-        )}
-      </MenuList>
+            </>
+          )}
+        </MenuList>
+      </Portal>
     </Menu>
   );
 } 

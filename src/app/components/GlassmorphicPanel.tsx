@@ -9,6 +9,7 @@ interface GlassmorphicPanelProps extends BoxProps {
   noBorder?: boolean;
   noShadow?: boolean;
   borderRadius?: string;
+  variant?: 'light' | 'dark';
 }
 
 const BLUR_STRENGTHS = {
@@ -19,10 +20,18 @@ const BLUR_STRENGTHS = {
 };
 
 const BG_OPACITIES = {
-  light: 0.02,
-  medium: 0.03,
-  strong: 0.4,
-  stronger: 0.7,
+  light: {
+    light: 0.1,
+    medium: 0.15,
+    strong: 0.2,
+    stronger: 0.25,
+  },
+  dark: {
+    light: 0.2,
+    medium: 0.3,
+    strong: 0.4,
+    stronger: 0.7,
+  },
 };
 
 export function GlassmorphicPanel({ 
@@ -31,14 +40,23 @@ export function GlassmorphicPanel({
   noBorder = false,
   noShadow = false,
   borderRadius = 'xl',
+  variant = 'dark',
   ...props 
 }: GlassmorphicPanelProps) {
+  const bgColor = variant === 'light' 
+    ? `rgba(255, 255, 255, ${BG_OPACITIES[variant][blurStrength]})`
+    : `rgba(0, 0, 0, ${BG_OPACITIES[variant][blurStrength]})`;
+
+  const borderColor = variant === 'light'
+    ? 'rgba(255, 255, 255, 0.3)'
+    : 'rgba(255, 255, 255, 0.1)';
+
   return (
     <Box
       backdropFilter={`blur(${BLUR_STRENGTHS[blurStrength]}px)`}
-      backgroundColor={`rgba(0, 0, 0, ${BG_OPACITIES[blurStrength]})`}
+      backgroundColor={bgColor}
       borderRadius={borderRadius}
-      border={noBorder ? 'none' : '1px solid rgba(255, 255, 255, 0.1)'}
+      border={noBorder ? 'none' : `1px solid ${borderColor}`}
       boxShadow={noShadow ? 'none' : '0 8px 32px rgba(0, 0, 0, 0.2)'}
       overflow="hidden"
       {...props}

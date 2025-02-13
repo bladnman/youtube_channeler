@@ -72,7 +72,7 @@ const themeOverrides: Partial<CustomTheme> = {
   },
   semanticTokens: {
     colors: {
-      'chakra-body-bg': { _light: 'white', _dark: 'gray.900' },
+      'chakra-body-bg': { _light: 'transparent', _dark: 'transparent' },
       'chakra-border-color': { _light: 'gray.200', _dark: 'gray.700' },
       'chakra-body-text': { _light: 'gray.800', _dark: 'gray.100' },
       'chakra-inverse-text': { _light: 'gray.100', _dark: 'gray.800' },
@@ -130,7 +130,7 @@ const themeOverrides: Partial<CustomTheme> = {
   styles: {
     global: {
       'html, body': {
-        bg: 'chakra-body-bg',
+        bg: 'transparent',
         color: 'chakra-body-text'
       }
     }

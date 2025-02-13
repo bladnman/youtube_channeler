@@ -3,20 +3,24 @@
  * Renders the search bar section with glassmorphism effects
  */
 
-import { GLASSMORPHISM, LAYOUT } from '@/app/constants/ui';
+import { GlassmorphicPanel } from '@/app/components/GlassmorphicPanel';
+import { LAYOUT } from '@/app/constants/ui';
+import { useLayout } from '@/app/theme/layout';
 import { Box } from '@chakra-ui/react';
 import { SearchBar } from './SearchBar';
 
 export const SearchSection = () => {
+  const layout = useLayout();
+  
   return (
     <Box 
-      pt={{ base: 6, md: 8 }}
+      pt={`calc(${layout.header.height} + 2rem)`}
       px={4}
       mb="auto"
       display="flex"
       justifyContent="center"
     >
-      <Box
+      <GlassmorphicPanel
         maxW={{ 
           base: LAYOUT.CONTAINER_MAX_WIDTH.BASE, 
           md: LAYOUT.CONTAINER_MAX_WIDTH.MD, 
@@ -25,17 +29,11 @@ export const SearchSection = () => {
         w="full"
         p={8}
         borderRadius="2xl"
-        backdropFilter={`blur(${GLASSMORPHISM.BLUR})`}
-        bg={GLASSMORPHISM.BACKGROUND.LIGHT}
-        boxShadow="xl"
-        border={`1px solid ${GLASSMORPHISM.BORDER.LIGHT}`}
-        _dark={{
-          bg: GLASSMORPHISM.BACKGROUND.DARK,
-          borderColor: GLASSMORPHISM.BORDER.DARK
-        }}
+        variant="light"
+        blurStrength="medium"
       >
         <SearchBar />
-      </Box>
+      </GlassmorphicPanel>
     </Box>
   );
 }; 

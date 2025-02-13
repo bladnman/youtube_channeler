@@ -11,8 +11,8 @@ interface VideoTileProps {
 }
 
 export function VideoTileV2({ video, onClick, isSelected = false }: VideoTileProps) {
-  const bgColor = isSelected ? 'rgba(255, 255, 255, 0.1)' : 'transparent';
-  const hoverBgColor = 'rgba(255, 255, 255, 0.05)';
+  const bgColor = isSelected ? 'rgba(255, 255, 255, 0.25)' : 'transparent';
+  const hoverBgColor = isSelected ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)';
 
   return (
     <Flex
@@ -29,6 +29,8 @@ export function VideoTileV2({ video, onClick, isSelected = false }: VideoTilePro
       borderColor="whiteAlpha.100"
       role="group"
       align="center"
+      borderLeft={isSelected ? "4px solid" : "4px solid transparent"}
+      borderLeftColor={isSelected ? "brand.500" : "transparent"}
     >
       {/* Thumbnail */}
       <Box 
@@ -59,17 +61,14 @@ export function VideoTileV2({ video, onClick, isSelected = false }: VideoTilePro
         <Text
           fontSize="sm"
           fontWeight="semibold"
-          color="white"
+          color={isSelected ? "gray.800" : "gray.700"}
           noOfLines={2}
           mb={1}
           transition="color 0.2s"
-          _groupHover={{
-            color: 'blue.200',
-          }}
         >
           {video.title}
         </Text>
-        <Text fontSize="xs" color="whiteAlpha.700">
+        <Text fontSize="xs" color={isSelected ? "gray.600" : "gray.500"}>
           {new Date(video.publishedAt).toLocaleDateString()}
         </Text>
       </Box>

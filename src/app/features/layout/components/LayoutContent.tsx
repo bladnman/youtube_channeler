@@ -1,19 +1,16 @@
 'use client';
 
 import { Box } from '@chakra-ui/react';
-import { usePathname } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
 import { useLayout } from '../../../theme/layout';
-import { Header } from './Header';
+import { GlassmorphicHeader } from './GlassmorphicHeader';
 
 interface LayoutContentProps {
   children: ReactNode;
 }
 
 export function LayoutContent({ children }: LayoutContentProps) {
-  const pathname = usePathname();
   const layout = useLayout();
-  const isChannelV2Page = pathname?.startsWith('/channel-v2/');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -26,13 +23,16 @@ export function LayoutContent({ children }: LayoutContentProps) {
   }
 
   return (
-    <Box>
-      {!isChannelV2Page && <Header />}
+    <Box position="relative" minH="100vh" bg="transparent" m={0} p={0}>
+      <GlassmorphicHeader />
       <Box
         as="main"
-        pt={!isChannelV2Page ? layout.header.height : 0}
-        minH="calc(100vh - 60px)"
-        bg="gray.50"
+        position="relative"
+        zIndex={1}
+        minH="100vh"
+        bg="transparent"
+        m={0}
+        mt={`-${layout.header.height}`}
       >
         {children}
       </Box>

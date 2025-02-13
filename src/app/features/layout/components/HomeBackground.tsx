@@ -3,9 +3,9 @@
  * Renders the main background container with a random background image
  */
 
-import { LAYOUT } from '@/app/constants/ui';
 import { Box } from '@chakra-ui/react';
 import { ReactNode } from 'react';
+import { useLayout } from '../../../theme/layout';
 
 interface HomeBackgroundProps {
   backgroundImage: string;
@@ -13,15 +13,17 @@ interface HomeBackgroundProps {
 }
 
 export const HomeBackground = ({ backgroundImage, children }: HomeBackgroundProps) => {
+  const layout = useLayout();
+  
   return (
     <Box
       as="main"
       position="fixed"
-      top={LAYOUT.HEADER_HEIGHT}
+      top={0}
       left="0"
       right="0"
       bottom="0"
-      height={`calc(100vh - ${LAYOUT.HEADER_HEIGHT})`}
+      minH="100vh"
       overflow="hidden"
       _before={{
         content: '""',

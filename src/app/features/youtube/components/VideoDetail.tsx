@@ -161,18 +161,16 @@ export const VideoDetail = () => {
             <VStack spacing={0.5} align="flex-start">
               <Text 
                 fontSize="md" 
-                color="white" 
+                color="gray.800" 
                 fontWeight="semibold"
-                textShadow="0 1px 2px rgba(0, 0, 0, 0.8)"
               >
                 {selectedVideo.channelTitle}
               </Text>
               {selectedVideo.subscriberCount && (
                 <Text 
                   fontSize="sm" 
-                  color="white" 
+                  color="gray.700" 
                   fontWeight="medium"
-                  textShadow="0 1px 2px rgba(0, 0, 0, 0.8)"
                 >
                   {formatCompactNumber(selectedVideo.subscriberCount)} subscribers
                 </Text>
@@ -269,7 +267,7 @@ export const VideoDetail = () => {
                   <LoadingSpinner spinnerSize="md" minHeight="100px" fadeDuration={0.5} />
                 ) : transcript ? (
                   <Box>
-                    <Text whiteSpace="pre-wrap" color="whiteAlpha.900" fontSize="sm">
+                    <Text whiteSpace="pre-wrap" color="gray.800" fontSize="sm">
                       {transcript}
                     </Text>
                   </Box>
