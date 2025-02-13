@@ -3,7 +3,7 @@
 import FavoriteButton from '@/app/features/channels/components/FavoriteButton';
 import { VideoGrid } from '@/app/features/youtube/components/VideoGrid';
 import { useYouTubeContext } from '@/app/features/youtube/context/YouTubeContext';
-import { Box, Container, Flex, HStack, Text } from '@chakra-ui/react';
+import { Box, Container, Fade, Flex, HStack, Spinner, Text } from '@chakra-ui/react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -25,10 +25,20 @@ interface ChannelData {
   customUrl: string;
 }
 
+function ChannelPageLoading() {
+  return (
+    <Flex align="center" justify="center" minHeight="70vh">
+      <Fade in={true} transition={{ enter: { duration: 0.5 } }}>
+        <Spinner thickness="4px" speed="0.65s" emptyColor="gray.200" color="brand.500" size="xl" />
+      </Fade>
+    </Flex>
+  );
+}
+
 function ChannelPageContent() {
   const params = useParams();
   const [channelData, setChannelData] = useState<ChannelData | null>(null);
-  const { setCurrentChannel, handleAPIError } = useYouTubeContext();
+  const { setCurrentChannel, handleAPIError, clearSelectedVideo } = useYouTubeContext();
   const handle = params.handle as string;
 
   useEffect(() => {
@@ -62,11 +72,12 @@ function ChannelPageContent() {
     // Clean up the context when unmounting
     return () => {
       setCurrentChannel(null);
+      clearSelectedVideo();
     };
-  }, [handle, setCurrentChannel, handleAPIError]);
+  }, [handle, setCurrentChannel, handleAPIError, clearSelectedVideo]);
 
   if (!channelData) {
-    return <Box>Loading...</Box>;
+    return <ChannelPageLoading />;
   }
 
   const { videos, ...channelInfo } = channelData;

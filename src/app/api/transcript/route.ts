@@ -1,3 +1,5 @@
+import { CACHE_KEYS } from '@/app/constants/services';
+import ServerCache from '@/app/utils/serverCache';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -9,6 +11,13 @@ export async function GET(request: Request) {
   }
 
   try {
+    // Check cache first
+    const cachedTranscript = ServerCache.get(`${CACHE_KEYS.TRANSCRIPT_PREFIX}${videoId}`);
+    if (cachedTranscript) {
+      console.log(`✅ Cache hit: Using cached transcript for video "${videoId}"`);
+      return NextResponse.json({ transcript: cachedTranscript });
+    }
+
     // Use innertube API to fetch transcript
     const innertubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
     const headers = {
@@ -109,6 +118,10 @@ export async function GET(request: Request) {
       console.log('Failed to extract text from transcript XML');
       return NextResponse.json({ error: 'Failed to parse transcript' }, { status: 500 });
     }
+
+    // Cache the transcript
+    ServerCache.set(`${CACHE_KEYS.TRANSCRIPT_PREFIX}${videoId}`, transcript);
+    console.log(`💾 Cached transcript for video "${videoId}"`);
 
     console.log('Successfully parsed transcript. Length:', transcript.length);
     return NextResponse.json({ transcript });

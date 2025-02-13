@@ -54,6 +54,7 @@ interface YouTubeContextType {
   setCurrentChannel: (channel: Channel | null) => void
   apiError: APIError | null
   handleAPIError: (error: Error) => void
+  clearSelectedVideo: () => void
 }
 
 const YouTubeContext = createContext<YouTubeContextType | undefined>(undefined)
@@ -191,6 +192,10 @@ export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const clearSelectedVideo = useCallback(() => {
+    setSelectedVideo(null);
+  }, []);
+
   return (
     <YouTubeContext.Provider value={{ 
       loading, 
@@ -201,7 +206,8 @@ export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
       currentChannel,
       setCurrentChannel,
       apiError,
-      handleAPIError
+      handleAPIError,
+      clearSelectedVideo
     }}>
       {children}
     </YouTubeContext.Provider>

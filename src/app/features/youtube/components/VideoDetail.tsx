@@ -1,9 +1,10 @@
 'use client'
 
+import { LoadingSpinner } from '@/app/components/LoadingSpinner'
 import { copyToClipboard, generateVideoMarkdown } from '@/app/utils/copyToClipboard'
 import { CopyIcon } from '@chakra-ui/icons'
 import { Box, Button, Heading, IconButton, Image, Link, Skeleton, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, Tooltip, VStack, useToast } from '@chakra-ui/react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useYouTubeContext } from '../context/YouTubeContext'
 
 const formatNumber = (num?: string) => {
@@ -47,6 +48,13 @@ export const VideoDetail = () => {
   const toast = useToast()
   const [transcript, setTranscript] = useState<string | null>(null);
   const [loadingTranscript, setLoadingTranscript] = useState(false);
+  const [tabIndex, setTabIndex] = useState(0);
+  
+  // Reset tab index when video changes
+  useEffect(() => {
+    setTabIndex(0);
+    setTranscript(null);
+  }, [selectedVideo?.id]);
   
   const handleTranscript = async () => {
     if (!selectedVideo) return;
@@ -59,12 +67,6 @@ export const VideoDetail = () => {
       if (response.ok) {
         console.log('Transcript loaded successfully');
         setTranscript(data.transcript);
-        toast({
-          title: 'Transcript loaded',
-          status: 'success',
-          duration: 2000,
-          isClosable: true
-        });
       } else {
         console.error('Failed to fetch transcript:', data.error);
         toast({
@@ -192,7 +194,17 @@ export const VideoDetail = () => {
             Watch on YouTube
           </Button>
           
-          <Tabs variant="enclosed" mt={2}>
+          <Tabs 
+            variant="enclosed" 
+            mt={2} 
+            index={tabIndex}
+            onChange={(index) => {
+              setTabIndex(index);
+              if (index === 1 && !transcript && !loadingTranscript) {
+                void handleTranscript();
+              }
+            }}
+          >
             <TabList>
               <Tab>Description</Tab>
               <Tab>Transcript</Tab>
@@ -213,23 +225,16 @@ export const VideoDetail = () => {
                 </Box>
               </TabPanel>
               <TabPanel>
-                <Button
-                  onClick={handleTranscript}
-                  colorScheme="brand"
-                  size="lg"
-                  isLoading={loadingTranscript}
-                  mb={2}
-                >
-                  {transcript ? "Refresh Transcript" : "Load Transcript"}
-                </Button>
-                {transcript && (
+                {loadingTranscript ? (
+                  <LoadingSpinner spinnerSize="md" minHeight="100px" fadeDuration={0.5} />
+                ) : transcript ? (
                   <Box mt={4}>
                     <Heading size="sm" mb={2}>Transcript</Heading>
                     <Text whiteSpace="pre-wrap" color="gray.700">
                       {transcript}
                     </Text>
                   </Box>
-                )}
+                ) : null}
               </TabPanel>
             </TabPanels>
           </Tabs>

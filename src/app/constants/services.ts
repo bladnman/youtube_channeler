@@ -7,4 +7,5 @@ export const CACHE_KEYS = {
   VIDEO_PREFIX: 'video:',
   CHANNEL_PREFIX: 'channel:',
   HANDLE_PREFIX: 'handle:',
+  TRANSCRIPT_PREFIX: 'transcript:',
 } as const; 
