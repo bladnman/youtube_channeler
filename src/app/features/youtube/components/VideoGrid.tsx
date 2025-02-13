@@ -71,7 +71,7 @@ export const VideoGrid = ({ videos, hideChannelInfo, currentChannel: propChannel
         
         {selectedVideo && (
           <Box
-            w="400px"
+            w="500px"
             flexShrink={0}
             display={{ base: 'none', lg: 'block' }}
             height="calc(100vh - 72px)"

@@ -1,6 +1,8 @@
 'use client'
 
-import { Box, Button, Heading, Image, Link, Skeleton, Stack, Text, VStack } from '@chakra-ui/react'
+import { copyToClipboard, generateVideoMarkdown } from '@/app/utils/copyToClipboard'
+import { CopyIcon } from '@chakra-ui/icons'
+import { Box, Button, Heading, IconButton, Image, Link, Skeleton, Stack, Text, Tooltip, VStack, useToast } from '@chakra-ui/react'
 import { useMemo } from 'react'
 import { useYouTubeContext } from '../context/YouTubeContext'
 
@@ -42,10 +44,27 @@ const formatDescription = (description: string = '') => {
 
 export const VideoDetail = () => {
   const { selectedVideo, loading } = useYouTubeContext()
+  const toast = useToast()
   
   const formattedDescription = useMemo(() => {
     return formatDescription(selectedVideo?.description)
   }, [selectedVideo?.description])
+  
+  const handleCopy = async () => {
+    if (!selectedVideo) return;
+    
+    const markdown = generateVideoMarkdown(selectedVideo);
+    const success = await copyToClipboard(markdown);
+    
+    toast({
+      title: success ? 'Copied!' : 'Failed to copy',
+      description: success ? 'Video information copied to clipboard' : 'Please try again',
+      status: success ? 'success' : 'error',
+      duration: 2000,
+      isClosable: true,
+      position: 'bottom-right'
+    });
+  };
   
   if (!selectedVideo) return null
   
@@ -78,7 +97,23 @@ export const VideoDetail = () => {
         </Box>
         
         <Stack spacing={{ base: 3, md: 4 }} maxW="850px" mx="auto" w="100%">
-          <Heading size="md">{selectedVideo.title}</Heading>
+          <Box display="flex" alignItems="flex-start" gap={2}>
+            <Heading size="md" flex={1}>{selectedVideo.title}</Heading>
+            <Tooltip 
+              label="Copy video info" 
+              placement="top"
+              hasArrow
+            >
+              <IconButton
+                icon={<CopyIcon />}
+                aria-label="Copy video information"
+                size="sm"
+                variant="ghost"
+                onClick={handleCopy}
+                colorScheme="brand"
+              />
+            </Tooltip>
+          </Box>
           
           {selectedVideo.channelTitle && (
             <Text fontSize="md" color="gray.700" fontWeight="medium">
